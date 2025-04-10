@@ -138,3 +138,53 @@ def test_security_policies(security_monitor):
         event=event)  # pylint: disable=protected-access
 
     assert authorized
+
+    event = Event(source=CONTROL_SYSTEM_QUEUE_NAME,
+                  destination=SAFETY_BLOCK_QUEUE_NAME,
+                  operation="set_direction",
+                  parameters=None)
+
+    authorized = security_monitor._check_event(             # pylint: disable=protected-access
+        event=event)  # pylint: disable=protected-access
+
+    assert authorized
+
+    event = Event(source=CONTROL_SYSTEM_QUEUE_NAME,
+                  destination=SAFETY_BLOCK_QUEUE_NAME,
+                  operation="release_cargo",
+                  parameters=None)
+    
+    authorized = security_monitor._check_event(             # pylint: disable=protected-access
+        event=event)  # pylint: disable=protected-access
+
+    assert authorized
+
+    event = Event(source=CONTROL_SYSTEM_QUEUE_NAME,
+                  destination=SAFETY_BLOCK_QUEUE_NAME,
+                  operation="lock_cargo",
+                  parameters=None)
+    
+    authorized = security_monitor._check_event(             # pylint: disable=protected-access
+        event=event)  # pylint: disable=protected-access
+
+    assert authorized
+    
+    event = Event(source=SAFETY_BLOCK_QUEUE_NAME,
+                  destination=CARGO_BAY_QUEUE_NAME,
+                  operation="lock_cargo ",
+                  parameters=None)
+    
+    authorized = security_monitor._check_event(             # pylint: disable=protected-access
+        event=event)  # pylint: disable=protected-access
+
+    assert authorized
+    
+    event = Event(source=SAFETY_BLOCK_QUEUE_NAME,
+                  destination=CARGO_BAY_QUEUE_NAME,
+                  operation="release_cargo",
+                  parameters=None)
+    
+    authorized = security_monitor._check_event(             # pylint: disable=protected-access
+        event=event)  # pylint: disable=protected-access
+
+    assert authorized
