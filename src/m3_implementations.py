@@ -321,7 +321,6 @@ class SecurityMonitor(BaseSecurityMonitor):
         
         Args:
             event: проверяемое событие
-            
         Returns:
             bool: True если событие разрешено, False если запрещено
         """
