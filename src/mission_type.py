@@ -24,3 +24,4 @@ class Mission:
     # ограничения скорости на маршруте
     speed_limits: List[GeoSpecificSpeedLimit]
     armed: bool  # поездка разрешена (истина) или запрещена (ложь)
+    signature: None | str
