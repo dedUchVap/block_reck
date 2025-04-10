@@ -71,7 +71,6 @@ class BaseSecurityMonitor(Process):
         """_check_events_q в цикле проверим все входящие сообщения,
         выход из цикла по условию отсутствия новых сообщений
         """
-
         while True:
             try:
                 event: Event = self._events_q.get_nowait()
