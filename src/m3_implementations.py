@@ -228,13 +228,19 @@ class SecurityMonitor(BaseSecurityMonitor):
         Определяет разрешенные взаимодействия между компонентами системы
         """
         # Базовые политики безопасности
-        policies = [
+        default_policies = [
             # Коммуникационный шлюз -> Система управления: установка маршрутного задания
             SecurityPolicy(
                 source=COMMUNICATION_GATEWAY_QUEUE_NAME,
                 destination=CONTROL_SYSTEM_QUEUE_NAME,
                 operation='set_mission'),
-                
+
+            # Коммуникационный шлюз -> Огрначительный блок: установка маршрутного задания
+            SecurityPolicy(
+                source=COMMUNICATION_GATEWAY_QUEUE_NAME,
+                destination=SAFETY_BLOCK_QUEUE_NAME,
+                operation='set_mission'), 
+
             # Система управления -> Ограничитель: установка скорости
             SecurityPolicy(
                 source=CONTROL_SYSTEM_QUEUE_NAME,
@@ -246,12 +252,30 @@ class SecurityMonitor(BaseSecurityMonitor):
                 source=CONTROL_SYSTEM_QUEUE_NAME,
                 destination=SAFETY_BLOCK_QUEUE_NAME,
                 operation='set_direction'),
-                
-            # Система навигации -> Система управления: обновление позиции
+
+            # Система Навигации -> Ограничетльный блок: установка направления
+            SecurityPolicy(
+                source=NAVIGATION_QUEUE_NAME,
+                destination=SAFETY_BLOCK_QUEUE_NAME,
+                operation='position_update'),
+
+            # Система навигации -> Блок Управления: установка направления
             SecurityPolicy(
                 source=NAVIGATION_QUEUE_NAME,
                 destination=CONTROL_SYSTEM_QUEUE_NAME,
-                operation='update_position'),
+                operation='position_update'),
+
+            # Система управления -> Ограничитель: блокировка груза
+            SecurityPolicy(
+                source=CONTROL_SYSTEM_QUEUE_NAME,
+                destination=SAFETY_BLOCK_QUEUE_NAME,
+                operation='lock_cargo'),
+                
+            # Система управления -> Ограничитель: разблокировка груза
+            SecurityPolicy(
+                source=CONTROL_SYSTEM_QUEUE_NAME,
+                destination=SAFETY_BLOCK_QUEUE_NAME,
+                operation='release_cargo'),
                 
             # Ограничитель -> Сервоприводы: установка скорости
             SecurityPolicy(
@@ -275,23 +299,25 @@ class SecurityMonitor(BaseSecurityMonitor):
             SecurityPolicy(
                 source=SAFETY_BLOCK_QUEUE_NAME,
                 destination=CARGO_BAY_QUEUE_NAME,
-                operation='release_cargo')
+                operation='release_cargo'),
         ]
         
-        self.set_security_policies(policies)
+        self.set_security_policies(policies=default_policies)
     
     def set_security_policies(self, policies):
         """ 
-        Установка политик безопасности
+        Установка новых политик безопасности
         
         Args:
             policies: список политик безопасности
         """
-        self._security_policies = set(policies)
+        self._security_policies = policies
+        self._log_message(
+            LOG_INFO, f"изменение политик безопасности: {policies}")
     
-    def _check_event(self, event: Event) -> bool:
+    def _check_event(self, event: Event):
         """ 
-        Проверка соответствия события политикам безопасности
+        Проверка входящих событий на соответствие политикам безопасности
         
         Args:
             event: проверяемое событие
@@ -299,12 +325,22 @@ class SecurityMonitor(BaseSecurityMonitor):
         Returns:
             bool: True если событие разрешено, False если запрещено
         """
-        # Создаем объект политики для сравнения
-        request = SecurityPolicy(
-            source=event.source,
-            destination=event.destination,
-            operation=event.operation
-        )
+        self._log_message(
+            LOG_DEBUG, f"проверка события {event}, по умолчанию выполнение запрещено")
         
-        # Проверяем наличие политики в множестве
-        return request in self._security_policies 
+        authorized = False
+        
+        # Проверяем каждую политику в списке
+        for policy in self._security_policies:
+            if (policy.source == event.source and 
+                policy.destination == event.destination and 
+                policy.operation == event.operation):
+                self._log_message(
+                    LOG_DEBUG, "событие разрешено политиками, выполняем")
+                authorized = True
+                break
+        
+        if authorized is False:
+            self._log_message(LOG_ERROR, f"событие не разрешено политиками безопасности! {event}")
+            
+        return authorized 
