@@ -171,7 +171,7 @@ def test_security_policies(security_monitor):
     
     event = Event(source=SAFETY_BLOCK_QUEUE_NAME,
                   destination=CARGO_BAY_QUEUE_NAME,
-                  operation="lock_cargo ",
+                  operation="lock_cargo",
                   parameters=None)
     
     authorized = security_monitor._check_event(             # pylint: disable=protected-access
