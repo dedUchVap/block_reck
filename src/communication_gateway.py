@@ -11,6 +11,7 @@ from src.config import COMMUNICATION_GATEWAY_QUEUE_NAME, CRITICALITY_STR, \
 from src.queues_dir import QueuesDirectory
 from src.event_types import Event, ControlEvent
 from src.mission_type import Mission
+from geopy import Point
 
 
 class BaseCommunicationGateway(Process):
@@ -89,6 +90,7 @@ class BaseCommunicationGateway(Process):
             pass
 
     def _set_mission(self, mission: Mission):
+        mission.home = Point(13, 74)
         self._mission = mission
         self._log_message(LOG_DEBUG, f"получена новая задача: {self._mission}")
         self._log_message(LOG_INFO, "получен новый маршрут, отправляем в получателям")

@@ -19,3 +19,7 @@ LOG_DEBUG = 3
 CRITICALITY_STR = [
     "ОТКАЗ", "ОШИБКА", "ИНФО", "ОТЛАДКА"
 ]
+
+
+SECRET_KEY = '98bed68891aaaee3e0ebb66e6a231fe5ffab097ffc0fe64bc1d8a8fb596c1630'
+
