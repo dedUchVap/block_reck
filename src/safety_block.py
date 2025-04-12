@@ -14,7 +14,7 @@ from src.config import (
     LOG_ERROR,
     LOG_DEBUG,
     LOG_INFO,
-    SECRET_KEY
+    SECRET_KEY,
 )
 from src.mission_type import Mission
 from src.queues_dir import QueuesDirectory
@@ -93,15 +93,22 @@ class BaseSafetyBlock(Process):
         """установка нового маршрутного задания"""
         authorizated_mission = MissionSignature.verify_mission(mission, SECRET_KEY)
         if authorizated_mission:
-            self._log_message(LOG_DEBUG, 'Миссия прошла проверку')
+            self._log_message(LOG_DEBUG, "Миссия прошла проверку")
         else:
-            self._log_message(LOG_ERROR, 'Миссия скомпроментирована, аварийная установка')
-            self.stop()
-            return
+            self._log_message(
+                LOG_ERROR, "Миссия скомпроментирована, аварийная установка"
+            )
+            self.__critical_stop()
         self._mission = mission
         self._route = Route(
             points=self._mission.waypoints, speed_limits=self._mission.speed_limits
         )
+
+    def __critical_stop(self):
+        self._speed = 0
+        self._direction = 0
+        self._send_speed_to_consumers()
+        self._send_direction_to_consumers()
 
     @abstractmethod
     def _set_new_direction(self, direction: float):
