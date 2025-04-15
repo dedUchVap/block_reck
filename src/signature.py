@@ -62,7 +62,7 @@ class MissionSignature:
     @classmethod
     def register_mission_signature(
         cls, mission: Mission, secret_key
-    ) -> Tuple[Mission, str]:
+    ) -> Mission:
         """
         Добавляем сигнатуру миссии
 

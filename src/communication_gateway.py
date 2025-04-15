@@ -90,7 +90,6 @@ class BaseCommunicationGateway(Process):
             pass
 
     def _set_mission(self, mission: Mission):
-        mission.home = Point(13, 74)
         self._mission = mission
         self._log_message(LOG_DEBUG, f"получена новая задача: {self._mission}")
         self._log_message(LOG_INFO, "получен новый маршрут, отправляем в получателям")

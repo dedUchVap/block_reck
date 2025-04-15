@@ -8,7 +8,6 @@ from src.security_policy_type import SecurityPolicy
 def test_security_policies(security_monitor):
     """ проверка политик безопасности """
 
-        # шаг 3. Добавление новой политики безопасности и повторная проверка запроса
     policies = security_monitor._security_policies
     # pylint: disable=protected-access
     policies.extend([
@@ -188,3 +187,4 @@ def test_security_policies(security_monitor):
         event=event)  # pylint: disable=protected-access
 
     assert authorized
+    

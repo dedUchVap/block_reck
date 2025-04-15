@@ -15,6 +15,7 @@ from src.config import (
     LOG_DEBUG,
     LOG_INFO,
     SECRET_KEY,
+    SECURITY_MONITOR_QUEUE_NAME,
 )
 from src.mission_type import Mission
 from src.queues_dir import QueuesDirectory
@@ -105,6 +106,14 @@ class BaseSafetyBlock(Process):
         )
 
     def __critical_stop(self):
+        event = Event(
+            self.event_source_name,
+            SECURITY_MONITOR_QUEUE_NAME,
+            operation="critical_stop",
+            parameters=None,
+        )
+        security_q = self._queues_dir.get_queue(SECURITY_MONITOR_QUEUE_NAME)
+        security_q.put(event)
         self._speed = 0
         self._direction = 0
         self._send_speed_to_consumers()
