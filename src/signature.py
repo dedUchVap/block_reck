@@ -1,120 +1,74 @@
-from dataclasses import dataclass
-import hashlib
-import json
-from copy import deepcopy
-from typing import Tuple
-import os
-from src.mission_type import Mission, GeoSpecificSpeedLimit
+from mission_type import Mission, GeoSpecificSpeedLimit
 from geopy import Point
-from typing import Dict
-
+import json
+import hashlib
+from copy import deepcopy
 
 class MissionSignature:
 
-    @staticmethod
-    def _serilaze_mission(mission) -> Dict:
-        """
-        Сериализация миссии
+    def __serilaze_mission(mission) -> dict:
 
-        Args:
-            mission (Mission): object
+        mission_dict = {}
 
-        Returns:
-            dict: Объект который можно сериализовать
+        points_list = []
 
-        """
-        # Список с точками из миссии
-        list_points = []
+        speed_limits = []
 
-        # Список с лимитами по скорости
-        list_speed_limits = []
-
-        # Словарь который вернет функция
-        dict_mission = {}
-
-        # Проходимся по объекту миссии
         for key, value in mission.__dict__.items():
-
             if key == "signature":
-                break
-
-            elif key == "waypoints":
+                continue
+            if key == "waypoints":
                 for value_point in value:
-                    print(value_point)
                     value_point: Point
-                    list_points.append(value_point.format())
+                    points_list.append(value_point.format())
 
-                value = list_points
-
-            elif key == "speed_limits":
-                for value_speed_limits in value:
-                    list_speed_limits.append(value_speed_limits.__dict__)
-
-                value = list_speed_limits
+                mission_dict[key] = points_list
 
             elif key == "home":
-                value = value.format()
+                value: Point
+                mission_dict[key] = value.format()
 
-            dict_mission[key] = value
+            elif key == "speed_limits":
+                for value_speed_limit in value:
+                    value_speed_limit: GeoSpecificSpeedLimit
+                    speed_limits.append({'speed_limit': value_speed_limit.speed_limit, 'waypoint_index': value_speed_limit.waypoint_index})
 
-        return dict_mission
+                mission_dict[key] = speed_limits
 
-    @classmethod
-    def register_mission_signature(
-        cls, mission: Mission, secret_key
-    ) -> Mission:
-        """
-        Добавляем сигнатуру миссии
-
-        Args:
-            mission (Mission): object
-            secret_key (str): Секретный ключ, для создания подписи, лучше его никому не показывать
-
-        Returns:
-            Mission: добавляется сигнатура в объект
-
-        """
-        serilaze_mission = cls._serilaze_mission(mission)
-        # Серилизуем данные в json, использую словарь объекта класса
-        mission_json = json.dumps(serilaze_mission, sort_keys=True)
-
-        # Создаем хеш дампа json
-        mission_hash = hashlib.sha256(mission_json.encode()).hexdigest()
-
-        # Создаем сигнатуру используя секретный ключ и хеш миссии
-        signature = hashlib.sha256((mission_hash + secret_key).encode()).hexdigest()
-
-        # Записываем сигнатуру
-        mission.signature = signature
-
-        return mission
+        mission_serilaze = json.dumps(mission_dict, sort_keys=True).encode()
+        
+        return mission_serilaze
 
     @classmethod
-    def verify_mission(cls, mission: Mission, secret_key):
-        """
-        Проверка миссии на изменения
+    def signature_mission(cls, mission: Mission, secret_key: str) -> Mission:
+        mission_serilaze = cls.__serilaze_mission(mission=mission)
+        
+        mission_copy = deepcopy(mission)
+        
+        signature = hashlib.sha256(mission_serilaze + secret_key.encode()).hexdigest()
+        
+        mission_copy.signature = signature
+        
+        return mission_copy
 
-        Args:
-            mission (Mission): объект
-            secret_key (str): Секретный ключ, для создания подписи, лучше его никому не показывать
+    @classmethod
+    def verify_signature(cls, mission: Mission, secret_key: str) -> Mission:
+        mission_serilaze = cls.__serilaze_mission(mission=mission)
+        
+        mission_copy = deepcopy(mission)
+        
+        signature = hashlib.sha256(mission_serilaze + secret_key.encode()).hexdigest()
+        
+        if (mission_copy.signature != signature):
+            return False
+        
+        return True
 
-        Returns:
-            bool: Возвращает булево значене, если миссия не изменилась то True
-        """
-        # Серилизация миссии
-        mission_serilaze = cls._serilaze_mission(mission)
-
-        # Преобразование в json
-        mission_json = json.dumps(mission_serilaze, sort_keys=True)
-
-        # Создаем хеш
-        mission_hash = hashlib.sha256(mission_json.encode()).hexdigest()
-
-        # Создаем сигнатуру используя секретный ключ и хеш миссии
-        signature = hashlib.sha256((mission_hash + secret_key).encode()).hexdigest()
-
-        # Проверяем совпадает ли сигнатура
-        if signature == mission.signature:
-            return True
-
-        return False
+mission = Mission(
+    home=Point(31, 48),
+    waypoints=[Point(31, 33), Point(35, 33)],
+    speed_limits=[GeoSpecificSpeedLimit(0, 30)],
+    armed=True,
+)
+mission_with_signature = MissionSignature.signature_mission(mission, secret_key="ffaf")
+print(MissionSignature.verify_signature(mission_with_signature, secret_key='fff'))

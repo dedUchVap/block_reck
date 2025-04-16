@@ -19,7 +19,6 @@ from src.config import (
 from src.queues_dir import QueuesDirectory
 from src.event_types import Event, ControlEvent
 from src.mission_type import Mission
-from src.signature import MissionSignature
 
 
 class MissionPlanner(Process):
@@ -120,7 +119,7 @@ class MissionPlanner(Process):
         self._log_message(LOG_DEBUG, f"запрошена новая задача: {mission}")
 
     def _set_mission(self, mission: Mission):
-        self._mission = MissionSignature.register_mission_signature(mission, SECRET_KEY)
+        self._mission = mission
         self._log_message(LOG_DEBUG, f"установлена новая задача: {self._mission}")
         self._log_message(LOG_INFO, "запрошена новая задача, отправляем получателям")
         self._send_mission_to_communication_gateway()

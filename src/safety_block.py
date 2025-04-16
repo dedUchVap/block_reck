@@ -21,7 +21,6 @@ from src.mission_type import Mission
 from src.queues_dir import QueuesDirectory
 from src.event_types import Event, ControlEvent
 from src.route import Route
-from src.signature import MissionSignature
 
 
 class BaseSafetyBlock(Process):
@@ -92,14 +91,6 @@ class BaseSafetyBlock(Process):
 
     def _set_mission(self, mission: Mission):
         """установка нового маршрутного задания"""
-        authorizated_mission = MissionSignature.verify_mission(mission, SECRET_KEY)
-        if authorizated_mission:
-            self._log_message(LOG_DEBUG, "Миссия прошла проверку")
-        else:
-            self._log_message(
-                LOG_ERROR, "Миссия скомпроментирована, аварийная установка"
-            )
-            self.__critical_stop()
         self._mission = mission
         self._route = Route(
             points=self._mission.waypoints, speed_limits=self._mission.speed_limits
