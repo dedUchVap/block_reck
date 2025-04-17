@@ -3,6 +3,7 @@ from multiprocessing import Queue, Process
 from typing import Optional
 from queue import Empty
 from abc import abstractmethod
+from src.mission_type import GeoSpecificSpeedLimit
 
 from time import sleep
 

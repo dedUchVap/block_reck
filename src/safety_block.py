@@ -6,6 +6,7 @@ from multiprocessing import Queue, Process
 from time import sleep
 from typing import Optional
 from geopy import Point as GeoPoint
+from types import FunctionType
 
 from src.config import (
     CRITICALITY_STR,
@@ -21,6 +22,7 @@ from src.mission_type import Mission
 from src.queues_dir import QueuesDirectory
 from src.event_types import Event, ControlEvent
 from src.route import Route
+from src.signature import MissionSignature
 
 
 class BaseSafetyBlock(Process):
@@ -36,6 +38,9 @@ class BaseSafetyBlock(Process):
 
         self._queues_dir = queues_dir
 
+        # Флаг используемый при компрометации миссии
+        self._ignore_event_speed_direction = False
+        
         # создаём очередь для сообщений на обработку
         self._events_q = Queue()
         self._events_q_name = self.event_source_name
@@ -91,20 +96,19 @@ class BaseSafetyBlock(Process):
 
     def _set_mission(self, mission: Mission):
         """установка нового маршрутного задания"""
+        if (MissionSignature.verify_signature(mission, SECRET_KEY)):
+            self._mission = mission
+            self._ignore_event_speed_direction = False
+        else: 
+            self._log_message(LOG_ERROR, 'Подпись миссии не прошла проверку, аварийная остановка')
+            self.__critical_stop()
         self._mission = mission
         self._route = Route(
             points=self._mission.waypoints, speed_limits=self._mission.speed_limits
         )
 
     def __critical_stop(self):
-        event = Event(
-            self.event_source_name,
-            SECURITY_MONITOR_QUEUE_NAME,
-            operation="critical_stop",
-            parameters=None,
-        )
-        security_q = self._queues_dir.get_queue(SECURITY_MONITOR_QUEUE_NAME)
-        security_q.put(event)
+        self._ignore_event_speed_direction = True
         self._speed = 0
         self._direction = 0
         self._send_speed_to_consumers()

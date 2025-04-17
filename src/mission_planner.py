@@ -5,6 +5,7 @@ from queue import Empty
 from typing import Optional, List
 from multiprocessing import Queue, Process
 from geopy import Point
+from src.signature import MissionSignature
 
 from src.config import (
     CRITICALITY_STR,
@@ -119,7 +120,7 @@ class MissionPlanner(Process):
         self._log_message(LOG_DEBUG, f"запрошена новая задача: {mission}")
 
     def _set_mission(self, mission: Mission):
-        self._mission = mission
+        self._mission = MissionSignature.signature_mission(mission, SECRET_KEY)
         self._log_message(LOG_DEBUG, f"установлена новая задача: {self._mission}")
         self._log_message(LOG_INFO, "запрошена новая задача, отправляем получателям")
         self._send_mission_to_communication_gateway()

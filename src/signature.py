@@ -1,4 +1,4 @@
-from mission_type import Mission, GeoSpecificSpeedLimit
+from src.mission_type import Mission, GeoSpecificSpeedLimit
 from geopy import Point
 import json
 import hashlib

@@ -1,3 +1,5 @@
+import secrets
+import string
 PLANNER_QUEUE_NAME = "planner"
 COMMUNICATION_GATEWAY_QUEUE_NAME = "communication"
 CONTROL_SYSTEM_QUEUE_NAME = "control"
@@ -20,6 +22,5 @@ CRITICALITY_STR = [
     "ОТКАЗ", "ОШИБКА", "ИНФО", "ОТЛАДКА"
 ]
 
-
-SECRET_KEY = '98bed68891aaaee3e0ebb66e6a231fe5ffab097ffc0fe64bc1d8a8fb596c1630'
+SECRET_KEY = 'YWnNSbgadhQKyterWiFQxwySDPOCjbbMwYLfhYFqBILVTvyWVADQSllvvTfqJJiK' 
 
