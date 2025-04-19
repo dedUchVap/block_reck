@@ -87,7 +87,7 @@ class BaseCommunicationGateway(Process):
                 except Exception as e:
                     self._log_message(LOG_ERROR, f"ошибка отправки координат: {e}")
         except Empty:
-            # никаких команд не поступило, ну и ладно
+            # никаких команд не поступило, ну и ладно  
             pass
 
     def _set_mission(self, mission: Mission):
